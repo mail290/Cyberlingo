@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile, SourceLang, SUBSCRIPTION_PRICE_NOK, TRIAL_DAYS, getTrialDaysLeft, isSubscriptionActive } from '../types';
-import { setStoredApiKey, clearStoredApiKey, validateApiKey } from '../services/geminiService';
+import { setStoredApiKey, clearStoredApiKey, validateApiKey, detectProvider } from '../services/geminiService';
 
 interface Props {
   user: UserProfile;
@@ -65,6 +65,9 @@ const SettingsScreen: React.FC<Props> = ({ user, onLogout, onApiKeySave, onSubsc
 
   const currentKey = localStorage.getItem('cyberlingo_api_key') || user.apiKey;
   const maskedKey = currentKey ? `${currentKey.slice(0, 6)}...${currentKey.slice(-4)}` : 'Ikke satt';
+  const providerLabel = currentKey
+    ? ({ gemini: 'Gemini', claude: 'Claude', openai: 'OpenAI' } as const)[detectProvider(currentKey)]
+    : null;
 
   const subActive = isSubscriptionActive(user.subscription);
   const trialLeft = user.subscription.plan === 'trial' ? getTrialDaysLeft(user.subscription) : null;
@@ -169,12 +172,12 @@ const SettingsScreen: React.FC<Props> = ({ user, onLogout, onApiKeySave, onSubsc
       </Section>
 
       {/* API key section */}
-      <Section title="Gemini API-nøkkel">
+      <Section title="AI API-nøkkel">
         <div className="px-4 py-4">
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="font-bold text-sm">
-                {currentKey ? '🔑 Nøkkel satt' : '⚠️ Ingen nøkkel'}
+                {currentKey ? `🔑 ${providerLabel}-nøkkel satt` : '⚠️ Ingen nøkkel'}
               </p>
               <p className="text-xs font-mono mt-0.5" style={{ color: 'var(--text-muted)' }}>
                 {currentKey ? maskedKey : 'AI-funksjoner er ikke tilgjengelige'}
@@ -204,7 +207,7 @@ const SettingsScreen: React.FC<Props> = ({ user, onLogout, onApiKeySave, onSubsc
                 type="password"
                 value={apiKeyInput}
                 onChange={e => { setApiKeyInput(e.target.value); setApiStatus('idle'); setApiError(''); }}
-                placeholder="AIza..."
+                placeholder="AIza...  /  sk-ant-...  /  sk-..."
                 className="app-input font-mono text-sm"
               />
               {apiError && (
@@ -265,7 +268,7 @@ const SettingsScreen: React.FC<Props> = ({ user, onLogout, onApiKeySave, onSubsc
       <Section title="App-informasjon">
         <Row icon="📱" label="Versjon" value="2.0.0" />
         <Row icon="🔐" label="Personvern" value="Data lagres lokalt" />
-        <Row icon="💡" label="Gemini AI" value="Google Generative AI" />
+        <Row icon="💡" label="AI-leverandør" value={providerLabel ?? 'Ikke satt'} />
       </Section>
 
       {/* Danger zone */}

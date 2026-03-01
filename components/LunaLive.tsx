@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import { SourceLang } from '../types';
-import { getStoredApiKey } from '../services/geminiService';
+import { getStoredApiKey, detectProvider } from '../services/geminiService';
 import NeonButton from './NeonButton';
 
 interface LunaLiveProps {
@@ -209,6 +209,23 @@ const LunaLive: React.FC<LunaLiveProps> = ({ lang }) => {
       hint: 'Начните говорить по-испански для активации декодирования.'
     }
   }[lang];
+
+  const storedKey = getStoredApiKey();
+  if (storedKey && detectProvider(storedKey) !== 'gemini') {
+    return (
+      <div
+        className="p-6 rounded-2xl text-center"
+        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+      >
+        <div className="text-4xl mb-3">🎙️</div>
+        <p className="font-bold mb-1">Luna Live krever Gemini API</p>
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          Sanntids stemmesamtale er kun tilgjengelig med Google Gemini API-nøkkel (starter med AIza...).
+          Bytt nøkkel under Profil → AI API-nøkkel.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="glass-panel p-6 rounded-lg border border-cyan/30 flex flex-col items-center gap-8 animate-in fade-in duration-700">
