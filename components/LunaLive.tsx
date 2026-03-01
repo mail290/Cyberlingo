@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import { SourceLang } from '../types';
+import { getStoredApiKey, detectProvider } from '../services/geminiService';
 import NeonButton from './NeonButton';
 
 interface LunaLiveProps {
@@ -48,7 +49,7 @@ const LunaLive: React.FC<LunaLiveProps> = ({ lang }) => {
   const startConnection = async () => {
     try {
       setError(null);
-      const ai = new GoogleGenAI({ apiKey: (process.env as any).API_KEY });
+      const ai = new GoogleGenAI({ apiKey: getStoredApiKey() });
       
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
       const inputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
@@ -61,7 +62,7 @@ const LunaLive: React.FC<LunaLiveProps> = ({ lang }) => {
       const analyzer = inputCtx.createAnalyser();
       analyzer.fftSize = 256;
       source.connect(analyzer);
-      analyzerRef.ref = analyzer;
+      analyzerRef.current = analyzer;
       drawVisualizer();
 
       const sessionPromise = ai.live.connect({
@@ -69,7 +70,7 @@ const LunaLive: React.FC<LunaLiveProps> = ({ lang }) => {
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
-          systemInstruction: `Du er Luna, en AI-mentor for spansk. Snakk spansk med brukeren, men gi korte forklaringer på ${lang === 'no' ? 'norsk' : 'russisk'} hvis de gjør feil. Oppmuntre til samtale.`,
+          systemInstruction: `Du er Luna, en AI-mentor for spansk. Snakk spansk med brukeren, men gi korte forklaringer på ${{ no: 'norsk', ru: 'russisk', en: 'engelsk', de: 'tysk' }[lang] ?? 'engelsk'} hvis de gjør feil. Oppmuntre til samtale.`,
           inputAudioTranscription: {},
           outputAudioTranscription: {}
         },
@@ -139,10 +140,10 @@ const LunaLive: React.FC<LunaLiveProps> = ({ lang }) => {
   };
 
   const drawVisualizer = () => {
-    if (!canvasRef.current || !analyzerRef.ref) return;
+    if (!canvasRef.current || !analyzerRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    const analyzer = analyzerRef.ref;
+    const analyzer = analyzerRef.current;
     const bufferLength = analyzer.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
 
@@ -186,7 +187,7 @@ const LunaLive: React.FC<LunaLiveProps> = ({ lang }) => {
     draw();
   };
 
-  const labels = {
+  const labels = ({
     no: {
       title: 'Neural Voice Link',
       sub: 'Luna sanntids-interaksjon',
@@ -195,7 +196,7 @@ const LunaLive: React.FC<LunaLiveProps> = ({ lang }) => {
       status: 'Status',
       online: 'SYNKRONISERT',
       offline: 'OFFLINE',
-      hint: 'Begynn å snakke spansk for å aktivere dekoding.'
+      hint: 'Begynn å snakke spansk for å aktivere dekoding.',
     },
     ru: {
       title: 'Голосовая связь',
@@ -205,9 +206,55 @@ const LunaLive: React.FC<LunaLiveProps> = ({ lang }) => {
       status: 'Статус',
       online: 'СИНХРОНИЗИРОВАНО',
       offline: 'ОФФЛАЙН',
-      hint: 'Начните говорить по-испански для активации декодирования.'
-    }
-  }[lang];
+      hint: 'Начните говорить по-испански для активации декодирования.',
+    },
+    en: {
+      title: 'Neural Voice Link',
+      sub: 'Luna real-time interaction',
+      connect: 'Establish Link',
+      disconnect: 'Disconnect',
+      status: 'Status',
+      online: 'SYNCHRONISED',
+      offline: 'OFFLINE',
+      hint: 'Start speaking Spanish to activate decoding.',
+    },
+    de: {
+      title: 'Neuraler Sprach-Link',
+      sub: 'Luna Echtzeit-Interaktion',
+      connect: 'Verbindung herstellen',
+      disconnect: 'Trennen',
+      status: 'Status',
+      online: 'SYNCHRONISIERT',
+      offline: 'OFFLINE',
+      hint: 'Beginne Spanisch zu sprechen, um die Dekodierung zu aktivieren.',
+    },
+  } as Record<string, { title: string; sub: string; connect: string; disconnect: string; status: string; online: string; offline: string; hint: string }>)[lang] ?? {
+    title: 'Neural Voice Link',
+    sub: 'Luna real-time interaction',
+    connect: 'Establish Link',
+    disconnect: 'Disconnect',
+    status: 'Status',
+    online: 'SYNCHRONISED',
+    offline: 'OFFLINE',
+    hint: 'Start speaking Spanish to activate decoding.',
+  };
+
+  const storedKey = getStoredApiKey();
+  if (storedKey && detectProvider(storedKey) !== 'gemini') {
+    return (
+      <div
+        className="p-6 rounded-2xl text-center"
+        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+      >
+        <div className="text-4xl mb-3">🎙️</div>
+        <p className="font-bold mb-1">Luna Live krever Gemini API</p>
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          Sanntids stemmesamtale er kun tilgjengelig med Google Gemini API-nøkkel (starter med AIza...).
+          Bytt nøkkel under Profil → AI API-nøkkel.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="glass-panel p-6 rounded-lg border border-cyan/30 flex flex-col items-center gap-8 animate-in fade-in duration-700">
