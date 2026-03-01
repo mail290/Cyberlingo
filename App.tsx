@@ -298,6 +298,44 @@ const App: React.FC = () => {
     return active;
   }, [user]);
 
+  // ─── UI labels based on lang ───────────────────────────────────────────
+  const ui = ({
+    no: {
+      navHome: 'Hjem', navLearn: 'Lær', navSpeak: 'Snakk', navProgress: 'Fremgang', navProfile: 'Profil',
+      learnLessons: 'Leksjoner', learnVocab: 'Vokabular', learnVerbs: 'Verb', learnPhrases: 'Fraser', learnCamera: 'Kamera',
+      speakConv: 'Samtale', speakAssist: 'Assistent',
+      lessonsTitle: 'Leksjoner', lessonsDesc: 'Lær spansk grammatikk systematisk fra A1 til B2',
+      backToLessons: 'Tilbake til leksjoner',
+    },
+    en: {
+      navHome: 'Home', navLearn: 'Learn', navSpeak: 'Speak', navProgress: 'Progress', navProfile: 'Profile',
+      learnLessons: 'Lessons', learnVocab: 'Vocabulary', learnVerbs: 'Verbs', learnPhrases: 'Phrases', learnCamera: 'Camera',
+      speakConv: 'Conversation', speakAssist: 'Assistant',
+      lessonsTitle: 'Lessons', lessonsDesc: 'Learn Spanish grammar systematically from A1 to B2',
+      backToLessons: 'Back to lessons',
+    },
+    de: {
+      navHome: 'Start', navLearn: 'Lernen', navSpeak: 'Sprechen', navProgress: 'Fortschritt', navProfile: 'Profil',
+      learnLessons: 'Lektionen', learnVocab: 'Vokabular', learnVerbs: 'Verben', learnPhrases: 'Phrasen', learnCamera: 'Kamera',
+      speakConv: 'Gespräch', speakAssist: 'Assistent',
+      lessonsTitle: 'Lektionen', lessonsDesc: 'Lerne Spanisch Grammatik systematisch von A1 bis B2',
+      backToLessons: 'Zurück zu Lektionen',
+    },
+    ru: {
+      navHome: 'Главная', navLearn: 'Учиться', navSpeak: 'Говорить', navProgress: 'Прогресс', navProfile: 'Профиль',
+      learnLessons: 'Уроки', learnVocab: 'Словарь', learnVerbs: 'Глаголы', learnPhrases: 'Фразы', learnCamera: 'Камера',
+      speakConv: 'Разговор', speakAssist: 'Ассистент',
+      lessonsTitle: 'Уроки', lessonsDesc: 'Учите испанскую грамматику систематически от A1 до B2',
+      backToLessons: 'Назад к урокам',
+    },
+  } as Record<string, { navHome: string; navLearn: string; navSpeak: string; navProgress: string; navProfile: string; learnLessons: string; learnVocab: string; learnVerbs: string; learnPhrases: string; learnCamera: string; speakConv: string; speakAssist: string; lessonsTitle: string; lessonsDesc: string; backToLessons: string }>)[sourceLang] ?? {
+    navHome: 'Home', navLearn: 'Learn', navSpeak: 'Speak', navProgress: 'Progress', navProfile: 'Profile',
+    learnLessons: 'Lessons', learnVocab: 'Vocabulary', learnVerbs: 'Verbs', learnPhrases: 'Phrases', learnCamera: 'Camera',
+    speakConv: 'Conversation', speakAssist: 'Assistant',
+    lessonsTitle: 'Lessons', lessonsDesc: 'Learn Spanish grammar systematically from A1 to B2',
+    backToLessons: 'Back to lessons',
+  };
+
   // ─── Lesson navigation ─────────────────────────────────────────────────
   const groupedLessons = INITIAL_LESSONS.reduce((acc, lesson) => {
     if (!acc[lesson.level]) acc[lesson.level] = [];
@@ -397,6 +435,7 @@ const App: React.FC = () => {
         {activeTab === 'home' && (
           <HomeMode
             user={user}
+            lang={sourceLang}
             onNavigate={(tab) => handleTabChange(tab)}
             onNavigateLearn={(mode) => { handleTabChange('learn'); setLearnMode(mode); }}
             onNavigateSpeak={() => handleTabChange('speak')}
@@ -412,11 +451,11 @@ const App: React.FC = () => {
               style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}
             >
               {([
-                { id: 'lessons', label: 'Leksjoner', icon: '📖' },
-                { id: 'vocab',   label: 'Vokabular', icon: '🔤' },
-                { id: 'verbs',   label: 'Verb',      icon: '⚡' },
-                { id: 'phrases', label: 'Fraser',    icon: '💬' },
-                { id: 'vision',  label: 'Kamera',    icon: '📷' },
+                { id: 'lessons', label: ui.learnLessons, icon: '📖' },
+                { id: 'vocab',   label: ui.learnVocab,   icon: '🔤' },
+                { id: 'verbs',   label: ui.learnVerbs,   icon: '⚡' },
+                { id: 'phrases', label: ui.learnPhrases, icon: '💬' },
+                { id: 'vision',  label: ui.learnCamera,  icon: '📷' },
               ] as { id: LearnMode; label: string; icon: string }[]).map(item => (
                 <button
                   key={item.id}
@@ -441,9 +480,9 @@ const App: React.FC = () => {
                   {!selectedLesson ? (
                     <div className="space-y-6 animate-fadeInUp">
                       <div>
-                        <h2 className="text-2xl font-black mb-1">Leksjoner</h2>
+                        <h2 className="text-2xl font-black mb-1">{ui.lessonsTitle}</h2>
                         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                          Lær spansk grammatikk systematisk fra A1 til B2
+                          {ui.lessonsDesc}
                         </p>
                       </div>
 
@@ -521,7 +560,7 @@ const App: React.FC = () => {
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
-                        Tilbake til leksjoner
+                        {ui.backToLessons}
                       </button>
 
                       <div className="flex items-center gap-2 mb-2">
@@ -579,9 +618,9 @@ const App: React.FC = () => {
               style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}
             >
               {([
-                { id: 'conversation', label: 'Samtale', icon: '🎭' },
-                { id: 'luna-live',    label: 'Luna Live', icon: '🎙️' },
-                { id: 'luna-text',    label: 'Assistent', icon: '🤖' },
+                { id: 'conversation', label: ui.speakConv,   icon: '🎭' },
+                { id: 'luna-live',    label: 'Luna Live',    icon: '🎙️' },
+                { id: 'luna-text',    label: ui.speakAssist, icon: '🤖' },
               ] as { id: SpeakMode; label: string; icon: string }[]).map(item => (
                 <button
                   key={item.id}
@@ -612,7 +651,7 @@ const App: React.FC = () => {
         {/* ── PROGRESS ─────────────────────────────────────────────────── */}
         {activeTab === 'progress' && (
           <div className="p-4 pb-24 animate-fadeIn">
-            <ProgressView user={user} totalLessons={INITIAL_LESSONS.length} />
+            <ProgressView user={user} totalLessons={INITIAL_LESSONS.length} lang={sourceLang} />
           </div>
         )}
 
@@ -639,11 +678,11 @@ const App: React.FC = () => {
         style={{ minHeight: 56 }}
       >
         {([
-          { tab: 'home',     icon: <IconHome />,     label: 'Hjem' },
-          { tab: 'learn',    icon: <IconLearn />,    label: 'Lær' },
-          { tab: 'speak',    icon: <IconSpeak />,    label: 'Snakk' },
-          { tab: 'progress', icon: <IconProgress />, label: 'Fremgang' },
-          { tab: 'profile',  icon: <IconProfile />,  label: 'Profil' },
+          { tab: 'home',     icon: <IconHome />,     label: ui.navHome },
+          { tab: 'learn',    icon: <IconLearn />,    label: ui.navLearn },
+          { tab: 'speak',    icon: <IconSpeak />,    label: ui.navSpeak },
+          { tab: 'progress', icon: <IconProgress />, label: ui.navProgress },
+          { tab: 'profile',  icon: <IconProfile />,  label: ui.navProfile },
         ] as { tab: AppTab; icon: React.ReactNode; label: string }[]).map(item => (
           <NavItem
             key={item.tab}
